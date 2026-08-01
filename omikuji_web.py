@@ -209,6 +209,52 @@ st.markdown(
         font-weight: 600;
     }
 
+    .score-title {
+        margin-top: 18px;
+        margin-bottom: 8px;
+        font-size: 1.05rem;
+        font-weight: bold;
+        color: #8b5e3c;
+    }
+
+    .score-box {
+        background: #fff8f1;
+        border-radius: 14px;
+        padding: 14px 16px;
+        border: 1px solid #edd6be;
+        color: #5a4a42;
+        text-align: center;
+    }
+
+    .super-score-box {
+        background: rgba(255, 250, 235, 0.9);
+        border-radius: 14px;
+        padding: 14px 16px;
+        border: 1px solid #e6c55a;
+        color: #5f4700;
+        text-align: center;
+    }
+
+    .score-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #b04a3a;
+        line-height: 1.4;
+    }
+
+    .super-score-number {
+        font-size: 2.1rem;
+        font-weight: bold;
+        color: #9c6b00;
+        line-height: 1.4;
+    }
+
+    .score-caption {
+        font-size: 0.96rem;
+        line-height: 1.7;
+        margin-top: 4px;
+    }
+
     .advice-title {
         margin-top: 18px;
         margin-bottom: 8px;
@@ -378,6 +424,14 @@ omikuji_data = [
         "advice": "少し深呼吸してから行動すると心が整います。無理をせず、できたことに目を向けてみてください。"
     },
     {
+        "rank": "末吉 🌸",
+        "message": "ゆっくりと運気が上向いていく日です。小さな幸せを見つけることで、気持ちも明るくなりそうです。",
+        "lucky_color": "藤色",
+        "lucky_number": 4,
+        "lucky_item": "香りのよい文房具",
+        "advice": "目の前の小さなことを丁寧にこなしてみましょう。積み重ねが次の幸運につながります。"
+    },
+    {
         "rank": "凶 ⚠️",
         "message": "今日は無理をせず、休息を意識して過ごしましょう。ていねいな行動が運気回復の鍵です。",
         "lucky_color": "藍色",
@@ -426,14 +480,35 @@ kotowaza_list = [
     }
 ]
 
+# ---------------------------------------------------------
+# ラッキースコアの範囲設定
+# 運勢ごとにランダムな点数範囲を変えます
+# ---------------------------------------------------------
+score_ranges = {
+    "超大吉": (98, 100),
+    "大吉": (90, 97),
+    "吉": (75, 89),
+    "中吉": (60, 74),
+    "小吉": (45, 59),
+    "末吉": (30, 44),
+    "凶": (10, 29)
+}
+
 def draw_omikuji():
     """出現率を調整してランダムにおみくじ結果を返す関数"""
-    weights = [2, 18, 22, 24, 22, 12]  # 超大吉は約2%
+    weights = [2, 17, 18, 22, 18, 13, 10]  # 超大吉は約2%
     return random.choices(omikuji_data, weights=weights, k=1)[0]
 
 def draw_kotowaza():
     """ランダムでことわざを1つ返す関数"""
     return random.choice(kotowaza_list)
+
+def get_lucky_score(rank):
+    """運勢に応じたラッキースコアを返す関数"""
+    for fortune_name, score_range in score_ranges.items():
+        if fortune_name in rank:
+            return random.randint(score_range[0], score_range[1])
+    return random.randint(50, 80)
 
 # ---------------------------------------------------------
 # アプリのタイトル表示
@@ -446,7 +521,6 @@ st.markdown(
 
 # ---------------------------------------------------------
 # 「おみくじを引く」ボタン
-# ※元のボタンは残しています
 # ---------------------------------------------------------
 if st.button("✨ おみくじを引く ✨"):
     countdown_placeholder = st.empty()
@@ -505,6 +579,7 @@ if st.button("✨ おみくじを引く ✨"):
 
     result = draw_omikuji()
     kotowaza = draw_kotowaza()
+    lucky_score = get_lucky_score(result["rank"])
     rank = result["rank"]
 
     # 結果に応じたアニメーション
@@ -541,6 +616,11 @@ if st.button("✨ おみくじを引く ✨"):
                 <div class="super-fortune-detail">🎨 <b>ラッキーカラー：</b> {result["lucky_color"]}</div>
                 <div class="super-fortune-detail">🔢 <b>ラッキーナンバー：</b> {result["lucky_number"]}</div>
                 <div class="super-fortune-detail">🎁 <b>ラッキーアイテム：</b> {result["lucky_item"]}</div>
+                <div class="score-title">⭐ 今日のラッキースコア</div>
+                <div class="super-score-box">
+                    <div class="super-score-number">{lucky_score}点 / 100点</div>
+                    <div class="score-caption">今日は特に運気が高まっている一日です。</div>
+                </div>
                 <div class="advice-title">🌸 今日の開運アドバイス</div>
                 <div class="super-advice-text">{result["advice"]}</div>
                 <div class="kotowaza-title">📜 今日のラッキーことわざ</div>
@@ -564,6 +644,11 @@ if st.button("✨ おみくじを引く ✨"):
                 <div class="fortune-detail">🎨 <b>ラッキーカラー：</b> {result["lucky_color"]}</div>
                 <div class="fortune-detail">🔢 <b>ラッキーナンバー：</b> {result["lucky_number"]}</div>
                 <div class="fortune-detail">🎁 <b>ラッキーアイテム：</b> {result["lucky_item"]}</div>
+                <div class="score-title">⭐ 今日のラッキースコア</div>
+                <div class="score-box">
+                    <div class="score-number">{lucky_score}点 / 100点</div>
+                    <div class="score-caption">今日の運気の目安として、楽しくチェックしてみましょう。</div>
+                </div>
                 <div class="advice-title">🌸 今日の開運アドバイス</div>
                 <div class="advice-text">{result["advice"]}</div>
                 <div class="kotowaza-title">📜 今日のラッキーことわざ</div>
