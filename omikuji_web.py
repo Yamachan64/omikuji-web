@@ -373,6 +373,122 @@ st.markdown(
         background-color: #a95438;
         color: white;
     }
+
+    .mission-title{
+        margin-top:20px;
+        font-size:20px;
+        font-weight:bold;
+        color:#b85c38;
+    }
+
+    .mission-box{
+        background:#fffaf5;
+        border:1px solid #f0d6b8;
+        border-radius:12px;
+        padding:16px;
+        margin-top:10px;
+    }
+
+    .mission-name{
+        font-size:22px;
+        font-weight:bold;
+        color:#b85c38;
+        margin-bottom:10px;
+    }
+
+    .mission-description{
+        color:#666;
+        line-height:1.8;
+    }
+
+    /* -------------------------------- */
+    /* 結果カード ふわっと表示 */
+    /* -------------------------------- */
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(25px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fortune-card,
+    .super-fortune-card {
+        animation: fadeInUp 0.8s ease-out;    }
+
+    /* -------------------------------- */
+    /* カウントダウン数字 ポンッ演出 */
+    /* -------------------------------- */
+
+    @keyframes countdownPop {
+        0% {
+            opacity: 0;
+            transform: scale(0.2);
+        }
+
+        50% {
+            opacity: 1;
+            transform: scale(1.7);
+        }
+
+        70% {
+            transform: scale(0.9);
+        }
+
+        85% {
+            transform: scale(1.15);
+        }
+
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .countdown-number {
+        font-size: 64px;
+        font-weight: bold;
+        animation: countdownPop 0.45s ease-out;
+    }
+
+    /* -------------------------------- */
+    /* 「結果が出ました！」演出 */
+    /* -------------------------------- */
+
+    @keyframes resultPop {
+        0% {
+            opacity: 0;
+            transform: scale(0.4);
+        }
+
+        60% {
+            opacity: 1;
+            transform: scale(1.25);
+        }
+
+        80% {
+            transform: scale(0.95);
+        }
+
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .result-announcement {
+        font-size: 28px;
+        font-weight: bold;
+        text-align: center;
+        color: #b85c38;
+        animation: resultPop 0.6s ease-out;
+    }
+
     </style>
     """,
     unsafe_allow_html=True
@@ -481,6 +597,33 @@ kotowaza_list = [
 ]
 
 # ---------------------------------------------------------
+# 今日の開運ミッション
+# おみくじを引くたびに1つランダムで表示します
+# ---------------------------------------------------------
+mission_list = [
+    {
+        "mission": "😊 笑顔であいさつを3回してみよう",
+        "description": "笑顔は幸運を呼び込む第一歩です。"
+    },
+    {
+        "mission": "🧹 身の回りを1か所だけ整えよう",
+        "description": "小さな整理が、気持ちと運気を整えてくれます。"
+    },
+    {
+        "mission": "☕ いつもより少しゆっくり休憩しよう",
+        "description": "心に余裕を作ることで、良い流れが生まれやすくなります。"
+    },
+    {
+        "mission": "💬 誰かに感謝を伝えてみよう",
+        "description": "感謝の言葉は、自分にも相手にも良い運気を届けます。"
+    },
+    {
+        "mission": "🚶 5分だけ歩いて気分転換しよう",
+        "description": "少し体を動かすことで、気持ちが前向きになります。"
+    }
+]
+
+# ---------------------------------------------------------
 # ラッキースコアの範囲設定
 # 運勢ごとにランダムな点数範囲を変えます
 # ---------------------------------------------------------
@@ -502,6 +645,10 @@ def draw_omikuji():
 def draw_kotowaza():
     """ランダムでことわざを1つ返す関数"""
     return random.choice(kotowaza_list)
+
+def draw_mission():
+    """ランダムで開運ミッションを1つ返す関数"""
+    return random.choice(mission_list)
 
 def get_lucky_score(rank):
     """運勢に応じたラッキースコアを返す関数"""
@@ -528,7 +675,7 @@ if st.button("✨ おみくじを引く ✨"):
     countdown_placeholder.markdown(
         """
         <div class="countdown-box">
-            <div class="countdown-text">おみくじを引いています…</div>
+            <div class="countdown-text">🎴 おみくじを振っています…</div>
         </div>
         """,
         unsafe_allow_html=True
@@ -568,7 +715,7 @@ if st.button("✨ おみくじを引く ✨"):
     countdown_placeholder.markdown(
         """
         <div class="countdown-box">
-            <div class="countdown-text">結果発表！</div>
+            <div class="result-announcement">🌸 結果が出ました！ 🌸</div>
         </div>
         """,
         unsafe_allow_html=True
@@ -579,6 +726,7 @@ if st.button("✨ おみくじを引く ✨"):
 
     result = draw_omikuji()
     kotowaza = draw_kotowaza()
+    mission = draw_mission()
     lucky_score = get_lucky_score(result["rank"])
     rank = result["rank"]
 
@@ -628,6 +776,11 @@ if st.button("✨ おみくじを引く ✨"):
                     <div class="kotowaza-quote">「{kotowaza["quote"]}」</div>
                     <div class="kotowaza-description">{kotowaza["description"]}</div>
                 </div>
+                <div class="mission-title">🎯 今日の開運ミッション</div>
+                <div class="mission-box">
+                <div class="mission-name">{mission["mission"]}</div>
+                <div class="mission-description">{mission["description"]}</div>
+                </div>
             </div>
             """,
             unsafe_allow_html=True
@@ -655,6 +808,11 @@ if st.button("✨ おみくじを引く ✨"):
                 <div class="kotowaza-box">
                     <div class="kotowaza-quote">「{kotowaza["quote"]}」</div>
                     <div class="kotowaza-description">{kotowaza["description"]}</div>
+                </div>
+                <div class="mission-title">🎯 今日の開運ミッション</div>
+                <div class="mission-box">
+                <div class="mission-name">{mission["mission"]}</div>
+                <div class="mission-description">{mission["description"]}</div>
                 </div>
             </div>
             """,
