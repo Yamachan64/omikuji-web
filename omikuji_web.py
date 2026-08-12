@@ -1,6 +1,7 @@
 import streamlit as st
 import random
 import time
+import requests
 
 # ---------------------------------------------------------
 # Streamlitページの基本設定
@@ -729,6 +730,25 @@ if st.button("✨ おみくじを引く ✨"):
     mission = draw_mission()
     lucky_score = get_lucky_score(result["rank"])
     rank = result["rank"]
+
+    # おみくじ累計回数をGoogleスプレッドシートに記録
+    counter_url = "https://script.google.com/macros/s/AKfycbzwB6t4S3rFJfuNfgdYPI7D6fcmmxVxYuNLjPiZjSNEi1fAcHcMfI3jtD0sMLTpU6rv/exec?action=increment"
+
+    try:
+        response = requests.get(counter_url, timeout=5)
+        response.raise_for_status()
+
+        count_data = response.json()
+        total_count = count_data["count"]
+
+    except Exception as e:
+        st.error(f"カウンター取得エラー：{e}")
+        total_count = None
+
+    if total_count is not None:
+        st.write(f"📊 おみくじを引いた回数: {total_count}回")
+    else:
+        st.write("📊 おみくじを引いた回数: 不明")
 
     # 結果に応じたアニメーション
     if "超大吉" in rank:
