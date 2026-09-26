@@ -746,9 +746,9 @@ if st.button("✨ おみくじを引く ✨"):
         total_count = None
 
     if total_count is not None:
-        st.write(f"📊 おみくじを引いた回数: {total_count}回")
+        st.write(f"📊 今日のおみくじの回数: {total_count}回")
     else:
-        st.write("📊 おみくじを引いた回数: 不明")
+        st.write("📊 今日のおみくじの回数: 不明")
 
     # 結果に応じたアニメーション
     if "超大吉" in rank:
