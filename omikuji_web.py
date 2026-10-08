@@ -2,6 +2,7 @@ import streamlit as st
 import random
 import time
 import requests
+from textwrap import dedent
 
 # ---------------------------------------------------------
 # Streamlitページの基本設定
@@ -670,7 +671,134 @@ st.markdown(
 # ---------------------------------------------------------
 # 「おみくじを引く」ボタン
 # ---------------------------------------------------------
-if st.button("✨ おみくじを引く ✨"):
+
+# おみくじを引いたかどうかを記憶
+if "drawn" not in st.session_state:
+    st.session_state.drawn = False
+
+
+def display_result(result, kotowaza, mission, lucky_score, total_count, play_animation=False):
+    """セッションに保存したおみくじ結果を表示する関数"""
+    rank = result["rank"]
+    is_super_lucky = "超大吉" in rank
+
+    if total_count is not None:
+        st.write(f"📊 今日のおみくじの回数: {total_count}回")
+    else:
+        st.write("📊 今日のおみくじの回数: 不明")
+
+    if play_animation:
+        if is_super_lucky:
+            st.balloons()
+            st.success("🎊 超大吉！大当たりです！今日は特別にツイています！")
+        elif "大吉" in rank:
+            st.balloons()
+        elif "凶" in rank:
+            st.snow()
+
+    st.subheader("🎉 あなたのおみくじの結果は… 🎉")
+
+    if is_super_lucky:
+        st.markdown(
+            dedent(
+                """
+                <div class="jackpot-text">
+                    🌟 おめでとうございます！レアな「超大吉」を引き当てました！ 🌟
+                </div>
+                """
+            ),
+            unsafe_allow_html=True
+        )
+
+    card_class = "super-fortune-card" if is_super_lucky else "fortune-card"
+    rank_class = "super-fortune-rank" if is_super_lucky else "fortune-rank"
+    message_class = "super-fortune-message" if is_super_lucky else "fortune-message"
+    detail_class = "super-fortune-detail" if is_super_lucky else "fortune-detail"
+    score_box_class = "super-score-box" if is_super_lucky else "score-box"
+    score_number_class = "super-score-number" if is_super_lucky else "score-number"
+    advice_class = "super-advice-text" if is_super_lucky else "advice-text"
+    kotowaza_class = "super-kotowaza-box" if is_super_lucky else "kotowaza-box"
+    badge = (
+        '<div class="super-badge-wrap">'
+        '<div class="super-badge">🎯 RARE FORTUNE GET! 🎯</div>'
+        '</div>'
+        if is_super_lucky
+        else ""
+    )
+    score_caption = (
+        "今日は特に運気が高まっている一日です。"
+        if is_super_lucky
+        else "今日の運気の目安として、楽しくチェックしてみましょう。"
+    )
+
+    st.markdown(
+        dedent(
+            f"""
+            <div class="{card_class}">{badge}<div class="{rank_class}">{result["rank"]}</div>
+                <div class="{message_class}">{result["message"]}</div>
+                <div class="{detail_class}">🎨 <b>ラッキーカラー：</b> {result["lucky_color"]}</div>
+                <div class="{detail_class}">🔢 <b>ラッキーナンバー：</b> {result["lucky_number"]}</div>
+                <div class="{detail_class}">🎁 <b>ラッキーアイテム：</b> {result["lucky_item"]}</div>
+                <div class="score-title">⭐ 今日のラッキースコア</div>
+                <div class="{score_box_class}">
+                    <div class="{score_number_class}">{lucky_score}点 / 100点</div>
+                    <div class="score-caption">{score_caption}</div>
+                </div>
+                <div class="advice-title">🌸 今日の開運アドバイス</div>
+                <div class="{advice_class}">{result["advice"]}</div>
+                <div class="kotowaza-title">📜 今日のラッキーことわざ</div>
+                <div class="{kotowaza_class}">
+                    <div class="kotowaza-quote">「{kotowaza["quote"]}」</div>
+                    <div class="kotowaza-description">{kotowaza["description"]}</div>
+                </div>
+                <div class="mission-title">🎯 今日の開運ミッション</div>
+                <div class="mission-box">
+                    <div class="mission-name">{mission["mission"]}</div>
+                    <div class="mission-description">{mission["description"]}</div>
+                </div>
+            </div>
+            """
+        ),
+        unsafe_allow_html=True
+    )
+
+    if is_super_lucky:
+        st.info("👑 超大吉はとても低い確率で出現する特別なおみくじです。まさに「当たり」ですね！")
+
+
+# おみくじを引く前の画面
+if not st.session_state.drawn:
+    st.markdown(
+        """
+        <div style="
+            text-align: center;
+            padding: 28px 20px;
+            margin: 20px auto 25px auto;
+            max-width: 560px;
+            background: rgba(255,255,255,0.65);
+            border: 1px solid #e6c9a8;
+            border-radius: 18px;
+        ">
+            <div style="font-size: 42px;">⛩️</div>
+            <div style="
+                font-size: 22px;
+                font-weight: bold;
+                margin-top: 8px;
+            ">
+                今日の運勢を占ってみましょう
+            </div>
+            <div style="
+                font-size: 14px;
+                margin-top: 10px;
+            ">
+                心を落ち着けて、おみくじを引いてください
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+if not st.session_state.drawn and st.button("✨ おみくじを引く ✨"):
     countdown_placeholder = st.empty()
 
     countdown_placeholder.markdown(
@@ -729,13 +857,18 @@ if st.button("✨ おみくじを引く ✨"):
     kotowaza = draw_kotowaza()
     mission = draw_mission()
     lucky_score = get_lucky_score(result["rank"])
-    rank = result["rank"]
+
+    # おみくじの結果をセッションに保存
+    st.session_state.omikuji_result = result
+    st.session_state.kotowaza = kotowaza
+    st.session_state.mission = mission
+    st.session_state.lucky_score = lucky_score
 
     # おみくじ累計回数をGoogleスプレッドシートに記録
     counter_url = "https://script.google.com/macros/s/AKfycbzwB6t4S3rFJfuNfgdYPI7D6fcmmxVxYuNLjPiZjSNEi1fAcHcMfI3jtD0sMLTpU6rv/exec?action=increment"
 
     try:
-        response = requests.get(counter_url, timeout=5)
+        response = requests.get(counter_url, timeout=15)
         response.raise_for_status()
 
         count_data = response.json()
@@ -745,112 +878,31 @@ if st.button("✨ おみくじを引く ✨"):
         st.error(f"カウンター取得エラー：{e}")
         total_count = None
 
-    if total_count is not None:
-        st.write(f"📊 今日のおみくじの回数: {total_count}回")
-    else:
-        st.write("📊 今日のおみくじの回数: 不明")
+    # カウンターの取得結果を保存
+    st.session_state.total_count = total_count
+    st.session_state.drawn = True
 
-    # 結果に応じたアニメーション
-    if "超大吉" in rank:
-        st.balloons()
-        st.success("🎊 超大吉！大当たりです！今日は特別にツイています！")
-    elif "大吉" in rank:
-        st.balloons()
-    elif "凶" in rank:
-        st.snow()
-
-    # 見出し表示
-    st.subheader("🎉 あなたのおみくじの結果は… 🎉")
-
-    # 超大吉だけ特別デザイン
-    if "超大吉" in rank:
-        st.markdown(
-            """
-            <div class="jackpot-text">
-                🌟 おめでとうございます！レアな「超大吉」を引き当てました！ 🌟
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-        st.markdown(
-            f"""
-            <div class="super-fortune-card">
-                <div class="super-badge-wrap">
-                    <div class="super-badge">🎯 RARE FORTUNE GET! 🎯</div>
-                </div>
-                <div class="super-fortune-rank">{result["rank"]}</div>
-                <div class="super-fortune-message">{result["message"]}</div>
-                <div class="super-fortune-detail">🎨 <b>ラッキーカラー：</b> {result["lucky_color"]}</div>
-                <div class="super-fortune-detail">🔢 <b>ラッキーナンバー：</b> {result["lucky_number"]}</div>
-                <div class="super-fortune-detail">🎁 <b>ラッキーアイテム：</b> {result["lucky_item"]}</div>
-                <div class="score-title">⭐ 今日のラッキースコア</div>
-                <div class="super-score-box">
-                    <div class="super-score-number">{lucky_score}点 / 100点</div>
-                    <div class="score-caption">今日は特に運気が高まっている一日です。</div>
-                </div>
-                <div class="advice-title">🌸 今日の開運アドバイス</div>
-                <div class="super-advice-text">{result["advice"]}</div>
-                <div class="kotowaza-title">📜 今日のラッキーことわざ</div>
-                <div class="super-kotowaza-box">
-                    <div class="kotowaza-quote">「{kotowaza["quote"]}」</div>
-                    <div class="kotowaza-description">{kotowaza["description"]}</div>
-                </div>
-                <div class="mission-title">🎯 今日の開運ミッション</div>
-                <div class="mission-box">
-                <div class="mission-name">{mission["mission"]}</div>
-                <div class="mission-description">{mission["description"]}</div>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-        st.info("👑 超大吉はとても低い確率で出現する特別なおみくじです。まさに「当たり」ですね！")
-    else:
-        # 通常の結果カード
-        st.markdown(
-            f"""
-            <div class="fortune-card">
-                <div class="fortune-rank">{result["rank"]}</div>
-                <div class="fortune-message">{result["message"]}</div>
-                <div class="fortune-detail">🎨 <b>ラッキーカラー：</b> {result["lucky_color"]}</div>
-                <div class="fortune-detail">🔢 <b>ラッキーナンバー：</b> {result["lucky_number"]}</div>
-                <div class="fortune-detail">🎁 <b>ラッキーアイテム：</b> {result["lucky_item"]}</div>
-                <div class="score-title">⭐ 今日のラッキースコア</div>
-                <div class="score-box">
-                    <div class="score-number">{lucky_score}点 / 100点</div>
-                    <div class="score-caption">今日の運気の目安として、楽しくチェックしてみましょう。</div>
-                </div>
-                <div class="advice-title">🌸 今日の開運アドバイス</div>
-                <div class="advice-text">{result["advice"]}</div>
-                <div class="kotowaza-title">📜 今日のラッキーことわざ</div>
-                <div class="kotowaza-box">
-                    <div class="kotowaza-quote">「{kotowaza["quote"]}」</div>
-                    <div class="kotowaza-description">{kotowaza["description"]}</div>
-                </div>
-                <div class="mission-title">🎯 今日の開運ミッション</div>
-                <div class="mission-box">
-                <div class="mission-name">{mission["mission"]}</div>
-                <div class="mission-description">{mission["description"]}</div>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    # 初心者向けコメント
-    st.markdown(
-        """
-        <div class="beginner-box">
-            💡 <b>初心者向けコメント</b><br>
-            Streamlitでは、<code>st.button()</code>でボタンを作り、
-            押されたときに処理を実行できます。<br>
-            また、<code>st.markdown()</code>にHTMLやCSSを組み合わせることで、
-            このようなおしゃれなデザインも作れます。
-        </div>
-        """,
-        unsafe_allow_html=True
+    display_result(
+        st.session_state.omikuji_result,
+        st.session_state.kotowaza,
+        st.session_state.mission,
+        st.session_state.lucky_score,
+        st.session_state.total_count,
+        play_animation=True
     )
-else:
-    st.info("「✨ おみくじを引く ✨」ボタンを押すと、今日の運勢が表示されます。")
+
+# 結果画面では保存済みのデータだけを表示する
+elif st.session_state.drawn:
+    display_result(
+        st.session_state.omikuji_result,
+        st.session_state.kotowaza,
+        st.session_state.mission,
+        st.session_state.lucky_score,
+        st.session_state.total_count
+    )
+
+# 戻るボタンは抽選直後と保存結果の再表示時の両方で表示する
+# 戻る操作では再抽選やカウンター更新を行わない
+if st.session_state.drawn and st.button("⛩️ 最初の画面に戻る"):
+    st.session_state.drawn = False
+    st.rerun()
